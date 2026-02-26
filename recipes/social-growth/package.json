@@ -1,0 +1,26 @@
+{
+  "name": "claw-social-backend",
+  "version": "1.0.0",
+  "description": "Professional Social Media Agent for OpenClaw",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "approve": "node src/approve.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "openclaw",
+    "agent",
+    "social-media",
+    "twitter",
+    "ai"
+  ],
+  "author": "Gaolai",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "rss-parser": "^3.13.0",
+    "twitter-api-v2": "^1.15.0"
+  }
+}

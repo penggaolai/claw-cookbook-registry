@@ -1,0 +1,10 @@
+{
+  "name": "Social Growth Agent",
+  "version": "1.0.0",
+  "description": "Auto-curates niche news (AI, Healthcare, UI) and drafts insightful commentary. Perfect for building authority.",
+  "author": "Gaolai",
+  "price": "Free",
+  "category": "social",
+  "entrypoint": "index.js",
+  "tags": ["social", "growth", "news", "ai", "twitter"]
+}

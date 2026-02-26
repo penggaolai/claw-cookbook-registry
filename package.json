@@ -1,0 +1,29 @@
+{
+  "name": "claw-cookbook",
+  "version": "0.1.0",
+  "description": "The official CLI for installing autonomous agent recipes from the Claw Cookbook.",
+  "type": "module",
+  "bin": {
+    "claw-cookbook": "bin/index.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "openclaw",
+    "ai",
+    "agents",
+    "automation",
+    "recipes",
+    "cookbook"
+  ],
+  "author": "Gaolai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/penggaolai/claw-social.git"
+  }
+}
