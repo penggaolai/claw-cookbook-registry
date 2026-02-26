@@ -35,22 +35,26 @@ async function mainLoop() {
         
         let action;
         if (hasPlaceholder) {
-          action = await rl.question("\nThis draft needs your insight. \nOptions: [e] Add Expert Take | [s] Skip for now | [q] Quit: ");
+          action = await rl.question("\nThis draft needs your professional perspective. \nOptions: [i] Add Expert Insight | [s] Skip for now | [q] Quit: ");
         } else {
-          action = await rl.question("\nOptions: [a] Approve & Post | [e] Edit | [s] Skip | [q] Quit: ");
+          action = await rl.question("\nOptions: [a] Approve & Post | [i] Edit Insight | [s] Skip | [q] Quit: ");
         }
         
-        if (action.toLowerCase() === 'e') {
-          const newTake = await rl.question("Enter your expert take: ");
-          const updatedContent = draft.content.replace("[Your expert take here]", newTake);
-          console.log("\n✅ Updated Draft:");
-          console.log(updatedContent);
+        if (action.toLowerCase() === 'i') {
+          const newInsight = await rl.question("Enter your expert insight: ");
+          const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
           
-          const confirm = await rl.question("\nPost now? [y/n]: ");
+          console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
+          console.log(updatedContent);
+          console.log("------------------------------");
+          
+          const confirm = await rl.question("\nDoes this look correct? Post to X now? [y/n]: ");
           if (confirm.toLowerCase() === 'y') {
             console.log("🚀 Posting to X...");
             // Here we would call the actual Twitter post logic
             console.log("✅ Posted successfully! (Simulated)");
+          } else {
+            console.log("⏭️ Post cancelled.");
           }
         } else if (action.toLowerCase() === 'a') {
           if (hasPlaceholder) {
