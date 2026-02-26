@@ -40,9 +40,9 @@ async function mainLoop() {
         
         let action;
         if (hasPlaceholder) {
-          action = await rl.question("\nOptions: [v] View Full Draft | [i] Add Expert Insight | [s] Skip | [q] Quit: ");
+          action = await rl.question("\nOptions: [v] View Draft | [a] Add Insight | [s] Skip | [q] Quit: ");
         } else {
-          action = await rl.question("\nOptions: [a] Approve & Post | [v] View Draft | [i] Edit Insight | [s] Skip | [q] Quit: ");
+          action = await rl.question("\nOptions: [p] Post to X | [v] View Draft | [a] Edit Insight | [s] Skip | [q] Quit: ");
         }
 
         if (action.toLowerCase() === 'v') {
@@ -65,8 +65,8 @@ async function mainLoop() {
   const startLoopAfterDiscovery = async (draft) => {
     const hasPlaceholder = draft.content.includes("[Your expert take here]");
     const prompt = hasPlaceholder 
-      ? "\nOptions: [i] Add Expert Insight | [s] Skip | [q] Quit: "
-      : "\nOptions: [a] Approve & Post | [i] Edit Insight | [s] Skip | [q] Quit: ";
+      ? "\nOptions: [a] Add Insight | [s] Skip | [q] Quit: "
+      : "\nOptions: [p] Post to X | [a] Edit Insight | [s] Skip | [q] Quit: ";
     
     const action = await rl.question(prompt);
     await handleAction(action, draft);
@@ -76,7 +76,7 @@ async function mainLoop() {
   const handleAction = async (action, draft) => {
     const hasPlaceholder = draft.content.includes("[Your expert take here]");
 
-    if (action.toLowerCase() === 'i') {
+    if (action.toLowerCase() === 'a') {
       const newInsight = await rl.question("Enter your expert insight: ");
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
       
@@ -91,9 +91,9 @@ async function mainLoop() {
       } else {
         console.log("⏭️ Post cancelled.");
       }
-    } else if (action.toLowerCase() === 'a') {
+    } else if (action.toLowerCase() === 'p') {
       if (hasPlaceholder) {
-        console.log("\n⚠️ Cannot approve: Please add your expert insight first [i].");
+        console.log("\n⚠️ Cannot post: Please add your expert insight first [a].");
       } else {
         console.log("🚀 Posting to X...");
         console.log("✅ Posted successfully! (Simulated)");
@@ -108,7 +108,7 @@ async function mainLoop() {
   };
 
   const promptAction = async () => {
-    const choice = await rl.question("\nAction [r/q]: ");
+    const choice = await rl.question("\nNext Action: [r] Run Again | [q] Quit & Exit: ");
     if (choice.toLowerCase() === 'r') {
       await startLoop();
     } else if (choice.toLowerCase() === 'q') {
