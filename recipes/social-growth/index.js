@@ -27,56 +27,84 @@ async function mainLoop() {
       const draft = await runAgent();
       
       if (draft && draft.status === 'pending') {
-        console.log("\n--- 📝 PENDING DRAFT ---");
-        console.log(draft.content);
-        console.log("------------------------");
-        
         const hasPlaceholder = draft.content.includes("[Your expert take here]");
+        
+        // Extract basic news info for a cleaner "News First" display
+        const newsTitle = draft.content.split('\n')[0].replace('🤖 AI Update: ', '');
+        const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[1] || "";
+
+        console.log("\n--- 📰 TOP STORY DISCOVERED ---");
+        console.log(`Title: ${newsTitle}`);
+        console.log(`Link:  ${newsLink}`);
+        console.log("-------------------------------");
         
         let action;
         if (hasPlaceholder) {
-          action = await rl.question("\nThis draft needs your professional perspective. \nOptions: [i] Add Expert Insight | [s] Skip for now | [q] Quit: ");
+          action = await rl.question("\nOptions: [v] View Full Draft | [i] Add Expert Insight | [s] Skip | [q] Quit: ");
         } else {
-          action = await rl.question("\nOptions: [a] Approve & Post | [i] Edit Insight | [s] Skip | [q] Quit: ");
+          action = await rl.question("\nOptions: [a] Approve & Post | [v] View Draft | [i] Edit Insight | [s] Skip | [q] Quit: ");
+        }
+
+        if (action.toLowerCase() === 'v') {
+          console.log("\n--- 📝 CURRENT DRAFT ---");
+          console.log(draft.content);
+          console.log("------------------------");
+          // Re-prompt for the next move
+          return startLoopAfterDiscovery(draft);
         }
         
-        if (action.toLowerCase() === 'i') {
-          const newInsight = await rl.question("Enter your expert insight: ");
-          const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
-          
-          console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
-          console.log(updatedContent);
-          console.log("------------------------------");
-          
-          const confirm = await rl.question("\nDoes this look correct? Post to X now? [y/n]: ");
-          if (confirm.toLowerCase() === 'y') {
-            console.log("🚀 Posting to X...");
-            // Here we would call the actual Twitter post logic
-            console.log("✅ Posted successfully! (Simulated)");
-          } else {
-            console.log("⏭️ Post cancelled.");
-          }
-        } else if (action.toLowerCase() === 'a') {
-          if (hasPlaceholder) {
-            console.log("\n⚠️ Cannot approve: Draft still contains the '[Your expert take here]' placeholder.");
-            console.log("Please use [e] to add your insight first.");
-          } else {
-            console.log("🚀 Posting to X...");
-            console.log("✅ Posted successfully! (Simulated)");
-          }
-        } else if (action.toLowerCase() === 'q') {
-          console.log("👋 Chef is leaving the kitchen. Goodbye!");
-          rl.close();
-          process.exit(0);
-        } else {
-          console.log("⏭️ Draft skipped.");
-        }
+        await handleAction(action, draft);
       }
     } catch (err) {
       console.error("❌ Error in agent run:", err.message);
     }
     
     promptAction();
+  };
+
+  const startLoopAfterDiscovery = async (draft) => {
+    const hasPlaceholder = draft.content.includes("[Your expert take here]");
+    const prompt = hasPlaceholder 
+      ? "\nOptions: [i] Add Expert Insight | [s] Skip | [q] Quit: "
+      : "\nOptions: [a] Approve & Post | [i] Edit Insight | [s] Skip | [q] Quit: ";
+    
+    const action = await rl.question(prompt);
+    await handleAction(action, draft);
+    promptAction();
+  };
+
+  const handleAction = async (action, draft) => {
+    const hasPlaceholder = draft.content.includes("[Your expert take here]");
+
+    if (action.toLowerCase() === 'i') {
+      const newInsight = await rl.question("Enter your expert insight: ");
+      const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
+      
+      console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
+      console.log(updatedContent);
+      console.log("------------------------------");
+      
+      const confirm = await rl.question("\nDoes this look correct? Post to X now? [y/n]: ");
+      if (confirm.toLowerCase() === 'y') {
+        console.log("🚀 Posting to X...");
+        console.log("✅ Posted successfully! (Simulated)");
+      } else {
+        console.log("⏭️ Post cancelled.");
+      }
+    } else if (action.toLowerCase() === 'a') {
+      if (hasPlaceholder) {
+        console.log("\n⚠️ Cannot approve: Please add your expert insight first [i].");
+      } else {
+        console.log("🚀 Posting to X...");
+        console.log("✅ Posted successfully! (Simulated)");
+      }
+    } else if (action.toLowerCase() === 'q') {
+      console.log("👋 Chef is leaving the kitchen. Goodbye!");
+      rl.close();
+      process.exit(0);
+    } else if (action.toLowerCase() === 's') {
+      console.log("⏭️ Draft skipped.");
+    }
   };
 
   const promptAction = async () => {
