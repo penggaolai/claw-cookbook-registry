@@ -1,4 +1,4 @@
-import { initClient, createDraft } from './twitter-utils.js';
+import { createDraft } from './adapters/twitter.js';
 import { fetchNews } from './news-fetcher.js';
 import config from '../config/default.js';
 import { PERSONA_PROMPT } from '../prompts/persona.js';

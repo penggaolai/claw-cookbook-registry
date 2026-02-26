@@ -1,27 +1,13 @@
-import config from '../config/default.js';
+import config from '../../config/default.js';
 import { TwitterApi } from 'twitter-api-v2';
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
 
 dotenv.config();
 
-// Helper to load persona
-const getPersona = async () => {
-  // If user has a custom persona file, read it, otherwise use default
-  try {
-    const custom = await fs.readFile('config/persona.json', 'utf-8');
-    return JSON.parse(custom);
-  } catch (e) {
-    return config.persona;
-  }
-};
-
-// Main Twitter Client Wrapper
 export const initClient = () => {
-  // Check for required env vars
   if (!process.env.X_API_KEY || !process.env.X_API_SECRET) {
     console.error("❌ Missing Twitter API keys in .env!");
-    console.error("Please add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET");
     process.exit(1);
   }
 
@@ -33,14 +19,25 @@ export const initClient = () => {
   });
 };
 
+export const postTweet = async (text) => {
+  console.log("🚀 Posting to X...");
+  try {
+    const client = initClient();
+    await client.v2.tweet(text);
+    console.log("✅ Posted successfully!");
+  } catch (err) {
+    console.error("❌ Failed to post to X:", err.message);
+  }
+};
+
 export const createDraft = async (type, content) => {
   const timestamp = new Date().toISOString();
   const draft = {
-    type,       // "tweet" or "reply"
-    content,    // The text
-    targetId: null, // For replies
+    type,
+    content,
+    targetId: null,
     timestamp,
-    status: "pending" // "approved" or "posted"
+    status: "pending"
   };
   
   await fs.writeFile(`.draft_${type}.json`, JSON.stringify(draft, null, 2));

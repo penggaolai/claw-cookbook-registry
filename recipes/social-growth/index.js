@@ -1,5 +1,5 @@
 import { runAgent } from './src/agent-main.js';
-import { initClient } from './src/twitter-utils.js';
+import { postTweet } from './src/adapters/twitter.js';
 import dotenv from 'dotenv';
 import config from './config/default.js';
 import readline from 'node:readline/promises';
@@ -12,26 +12,18 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-// Ensure config is loaded
-if (!config.twitter.appKey || !config.twitter.appSecret) {
-  console.warn("⚠️ Twitter API keys missing! Please check .env file.");
-}
-
 async function mainLoop() {
-  console.log("\n🦞 Claw Social Backend Starting...");
+  console.log("\n🦞 Claw Social Agent Starting...");
   console.log("----------------------------------");
-  console.log("Commands: [n] Next | [q] Quit");
 
   const startLoop = async () => {
     try {
       const draft = await runAgent();
-      
       if (!draft) {
         console.log("👋 Chef is leaving the kitchen. Goodbye!");
         rl.close();
         process.exit(0);
       }
-
       await handleDiscovery(draft);
     } catch (err) {
       console.error("❌ Error in agent run:", err.message);
@@ -68,9 +60,9 @@ async function mainLoop() {
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
       draft.content = updatedContent;
       
-      console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
+      console.log("\n--- 🧐 FINAL REVIEW ---");
       console.log(updatedContent);
-      console.log("------------------------------");
+      console.log("-----------------------");
       
       const confirm = await rl.question("\nEverything looks good and ready to be posted to X? [y/n]: ");
       if (confirm.toLowerCase() === 'y') {
@@ -98,18 +90,6 @@ async function mainLoop() {
     } else {
       console.log("⚠️ Invalid input. Please try again.");
       return handleDiscovery(draft);
-    }
-  };
-
-  const postTweet = async (text) => {
-    console.log("🚀 Posting to X...");
-    try {
-      const client = initClient();
-      await client.v2.tweet(text);
-      console.log("✅ Posted successfully!");
-    } catch (err) {
-      console.error("❌ Failed to post to X:", err.message);
-      if (err.data) console.error("Details:", JSON.stringify(err.data));
     }
   };
 
