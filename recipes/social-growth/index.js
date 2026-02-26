@@ -19,7 +19,7 @@ if (!config.twitter.appKey || !config.twitter.appSecret) {
 async function mainLoop() {
   console.log("\n🦞 Claw Social Backend Starting...");
   console.log("----------------------------------");
-  console.log("Commands: [r] Run Now | [q] Quit");
+  console.log("Commands: [n] Next | [q] Quit");
 
   const startLoop = async () => {
     try {
@@ -95,8 +95,10 @@ async function mainLoop() {
       if (confirm.toLowerCase() === 'y') {
         console.log("🚀 Posting to X...");
         console.log("✅ Posted successfully! (Simulated)");
-      } else {
+      } else if (confirm.toLowerCase() === 'n') {
         console.log("⏭️ Post cancelled.");
+      } else {
+        console.log("⚠️ Invalid input. Action cancelled.");
       }
     } else if (action.toLowerCase() === 'p') {
       if (hasPlaceholder) {
@@ -115,7 +117,7 @@ async function mainLoop() {
   };
 
   const promptAction = async () => {
-    const choice = await rl.question("\nMenu: [n] Next (Check for new news) | [q] Quit & Exit: ");
+    const choice = await rl.question("\nMenu: [n] Next Story | [q] Quit: ");
     if (choice.toLowerCase() === 'n') {
       await startLoop();
     } else if (choice.toLowerCase() === 'q') {
