@@ -102,5 +102,5 @@ export const runAgent = async () => {
   await fs.writeFile('.draft_history.json', JSON.stringify(draftedUrls, null, 2));
 
   console.log("✅ Draft saved to .draft_tweet.json");
-  console.log("To review/approve, check the file or use the web dashboard.");
+  return draft;
 };
