@@ -23,69 +23,49 @@ async function mainLoop() {
 
   const startLoop = async () => {
     try {
-      // runAgent now returns the draft object so we can handle it interactively
       const draft = await runAgent();
       
       if (!draft) {
-        // No more news to draft
         console.log("👋 Chef is leaving the kitchen. Goodbye!");
         rl.close();
         process.exit(0);
       }
 
-      if (draft && draft.status === 'pending') {
-        const hasPlaceholder = draft.content.includes("[Your expert take here]");
-        
-        // Extract basic news info for a cleaner "News First" display
-        const newsTitle = draft.content.split('\n')[0].replace('🤖 AI Update: ', '');
-        const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[1] || "";
-
-        console.log("\n--- 📰 TOP STORY DISCOVERED ---");
-        console.log(`Title: ${newsTitle}`);
-        console.log(`Link:  ${newsLink}`);
-        console.log("-------------------------------");
-        
-        let action;
-        if (hasPlaceholder) {
-          action = await rl.question("\nOptions: [v] View Draft | [a] Add Insight | [s] Skip | [q] Quit: ");
-        } else {
-          action = await rl.question("\nOptions: [p] Post to X | [v] View Draft | [a] Edit Insight | [s] Skip | [q] Quit: ");
-        }
-
-        if (action.toLowerCase() === 'v') {
-          console.log("\n--- 📝 CURRENT DRAFT ---");
-          console.log(draft.content);
-          console.log("------------------------");
-          // Re-prompt for the next move
-          return startLoopAfterDiscovery(draft);
-        }
-        
-        await handleAction(action, draft);
-      }
+      await handleDiscovery(draft);
     } catch (err) {
       console.error("❌ Error in agent run:", err.message);
+      await promptAction();
     }
-    
-    promptAction();
   };
 
-  const startLoopAfterDiscovery = async (draft) => {
+  const handleDiscovery = async (draft) => {
     const hasPlaceholder = draft.content.includes("[Your expert take here]");
-    const prompt = hasPlaceholder 
-      ? "\nOptions: [a] Add Insight | [s] Skip | [q] Quit: "
-      : "\nOptions: [p] Post to X | [a] Edit Insight | [s] Skip | [q] Quit: ";
+    const newsTitle = draft.content.split('\n')[0].replace('🤖 AI Update: ', '');
+    const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[1] || "";
+
+    console.log("\n--- 📰 TOP STORY DISCOVERED ---");
+    console.log(`Title: ${newsTitle}`);
+    console.log(`Link:  ${newsLink}`);
+    console.log("-------------------------------");
     
-    const action = await rl.question(prompt);
-    await handleAction(action, draft);
-    promptAction();
-  };
+    let action;
+    if (hasPlaceholder) {
+      action = await rl.question("\nOptions: [v] View Draft | [a] Add Insight | [s] Skip | [q] Quit: ");
+    } else {
+      action = await rl.question("\nOptions: [p] Post to X | [v] View Draft | [a] Edit Insight | [s] Skip | [q] Quit: ");
+    }
 
-  const handleAction = async (action, draft) => {
-    const hasPlaceholder = draft.content.includes("[Your expert take here]");
+    action = action.toLowerCase();
 
-    if (action.toLowerCase() === 'a') {
+    if (action === 'v') {
+      console.log("\n--- 📝 CURRENT DRAFT ---");
+      console.log(draft.content);
+      console.log("------------------------");
+      return handleDiscovery(draft); // Loop back to discovery for the same story
+    } else if (action === 'a') {
       const newInsight = await rl.question("Enter your expert insight: ");
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
+      draft.content = updatedContent; // Update draft in memory
       
       console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
       console.log(updatedContent);
@@ -95,24 +75,30 @@ async function mainLoop() {
       if (confirm.toLowerCase() === 'y') {
         console.log("🚀 Posting to X...");
         console.log("✅ Posted successfully! (Simulated)");
-      } else if (confirm.toLowerCase() === 'n') {
-        console.log("⏭️ Post cancelled.");
+        return promptAction();
       } else {
-        console.log("⚠️ Invalid input. Action cancelled.");
+        console.log("⏭️ Post cancelled.");
+        return handleDiscovery(draft); // Return to discovery menu for this story
       }
-    } else if (action.toLowerCase() === 'p') {
+    } else if (action === 'p') {
       if (hasPlaceholder) {
         console.log("\n⚠️ Cannot post: Please add your expert insight first [a].");
+        return handleDiscovery(draft);
       } else {
         console.log("🚀 Posting to X...");
         console.log("✅ Posted successfully! (Simulated)");
+        return promptAction();
       }
-    } else if (action.toLowerCase() === 'q') {
+    } else if (action === 'q') {
       console.log("👋 Chef is leaving the kitchen. Goodbye!");
       rl.close();
       process.exit(0);
-    } else if (action.toLowerCase() === 's') {
+    } else if (action === 's') {
       console.log("⏭️ Draft skipped.");
+      return promptAction();
+    } else {
+      console.log("⚠️ Invalid input. Please try again.");
+      return handleDiscovery(draft);
     }
   };
 
@@ -125,7 +111,8 @@ async function mainLoop() {
       rl.close();
       process.exit(0);
     } else {
-      promptAction();
+      console.log("⚠️ Invalid input.");
+      await promptAction();
     }
   };
 
