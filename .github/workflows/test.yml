@@ -1,0 +1,30 @@
+name: Registry Test Suite
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-recipes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: recipes/social-growth/package-lock.json
+
+      - name: Install Dependencies (Social Growth)
+        run: |
+          cd recipes/social-growth
+          npm install
+
+      - name: Run Unit Tests (Social Growth)
+        run: |
+          cd recipes/social-growth
+          npm test
