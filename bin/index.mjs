@@ -23,7 +23,6 @@ async function setup() {
   if (command !== 'use' || !recipeName) {
     console.log("\nUsage: npx claw-cookbook use [recipe-name] [--key=YOUR_LICENSE_KEY]");
     console.log("Example (Free): npx claw-cookbook use social-growth");
-    console.log("Example (Paid): npx claw-cookbook use networker --key=XXXX-XXXX-XXXX\n");
     process.exit(0);
   }
 
@@ -42,7 +41,6 @@ async function setup() {
       console.log("❌ Installation cancelled.");
       process.exit(1);
     }
-    // In Phase 2, we would validate this key against your backend
     console.log("🎫 Validating license key...");
     await new Promise(r => setTimeout(r, 1000));
     console.log("✅ License validated!");
@@ -57,19 +55,14 @@ async function setup() {
 
   console.log(`\n👨‍🍳 Preparing to cook: ${recipeName}...`);
 
-  // 2. Fetching Logic
-  console.log("📦 Fetching ingredients...");
+  // 2. Clone/Copy Recipe Files
+  console.log("📦 Fetching ingredients from Registry...");
   
-  if (isPremium) {
-    // In Phase 2, this would pull from a PRIVATE repo using the validated token
-    console.log("🔐 Authenticating with private registry...");
-  }
-
   const tempDir = path.join(process.cwd(), `.temp-recipe-${Date.now()}`);
   const gitClone = spawnSync('git', ['clone', '--depth', '1', REGISTRY_URL, tempDir], { stdio: 'inherit' });
 
   if (gitClone.status !== 0) {
-    console.error("❌ Failed to reach the registry.");
+    console.error("❌ Failed to clone registry.");
     process.exit(1);
   }
 
@@ -83,7 +76,7 @@ async function setup() {
       spawnSync('cp', ['-r', src, dest]);
     }
   } catch (e) {
-    console.error(`\n❌ Recipe '${recipeName}' not found or access denied.`);
+    console.error(`❌ Recipe '${recipeName}' not found in the registry!`);
     await fs.rm(tempDir, { recursive: true, force: true });
     await fs.rm(targetDir, { recursive: true, force: true });
     process.exit(1);
@@ -93,10 +86,22 @@ async function setup() {
 
   // 3. Configure .env
   console.log("\n🧂 Adding seasoning (Configuration)...");
-  const xKey = await rl.question("Enter your X (Twitter) API Key: ");
-  const aiKey = await rl.question("Enter your AI Provider API Key: ");
+  
+  console.log("\n--- X (Twitter) API Credentials ---");
+  const xApiKey = await rl.question("API Key (Consumer Key): ");
+  const xApiSecret = await rl.question("API Key Secret (Consumer Secret): ");
+  const xAccessToken = await rl.question("Access Token: ");
+  const xAccessTokenSecret = await rl.question("Access Token Secret: ");
 
-  let envContent = `X_API_KEY=${xKey}\nAI_API_KEY=${aiKey}\n`;
+  console.log("\n--- AI Provider Credentials ---");
+  const aiKey = await rl.question("AI Provider API Key (Gemini/OpenAI): ");
+
+  let envContent = `X_API_KEY=${xApiKey}
+X_API_SECRET=${xApiSecret}
+X_ACCESS_TOKEN=${xAccessToken}
+X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}
+AI_API_KEY=${aiKey}\n`;
+
   if (isPremium) envContent += `CLAW_LICENSE_KEY=${licenseKey}\n`;
 
   await fs.writeFile(path.join(targetDir, '.env'), envContent);
