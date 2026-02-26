@@ -72,7 +72,7 @@ async function mainLoop() {
       console.log(updatedContent);
       console.log("------------------------------");
       
-      const confirm = await rl.question("\nDoes this look correct? Post to X now? [y/n]: ");
+      const confirm = await rl.question("\nEverything look good? Ready to serve to X? [y/n]: ");
       if (confirm.toLowerCase() === 'y') {
         await postTweet(draft.content);
         return promptAction();
