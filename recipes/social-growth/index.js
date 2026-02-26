@@ -1,4 +1,5 @@
 import { runAgent } from './src/agent-main.js';
+import { initClient } from './src/twitter-utils.js';
 import dotenv from 'dotenv';
 import config from './config/default.js';
 import readline from 'node:readline/promises';
@@ -61,11 +62,11 @@ async function mainLoop() {
       console.log("\n--- 📝 CURRENT DRAFT ---");
       console.log(draft.content);
       console.log("------------------------");
-      return handleDiscovery(draft); // Loop back to discovery for the same story
+      return handleDiscovery(draft);
     } else if (action === 'a') {
       const newInsight = await rl.question("Enter your expert insight: ");
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
-      draft.content = updatedContent; // Update draft in memory
+      draft.content = updatedContent;
       
       console.log("\n--- 🧐 FINAL TWEET REVIEW ---");
       console.log(updatedContent);
@@ -73,20 +74,18 @@ async function mainLoop() {
       
       const confirm = await rl.question("\nDoes this look correct? Post to X now? [y/n]: ");
       if (confirm.toLowerCase() === 'y') {
-        console.log("🚀 Posting to X...");
-        console.log("✅ Posted successfully! (Simulated)");
+        await postTweet(draft.content);
         return promptAction();
       } else {
         console.log("⏭️ Post cancelled.");
-        return handleDiscovery(draft); // Return to discovery menu for this story
+        return handleDiscovery(draft);
       }
     } else if (action === 'p') {
       if (hasPlaceholder) {
         console.log("\n⚠️ Cannot post: Please add your expert insight first [a].");
         return handleDiscovery(draft);
       } else {
-        console.log("🚀 Posting to X...");
-        console.log("✅ Posted successfully! (Simulated)");
+        await postTweet(draft.content);
         return promptAction();
       }
     } else if (action === 'q') {
@@ -99,6 +98,18 @@ async function mainLoop() {
     } else {
       console.log("⚠️ Invalid input. Please try again.");
       return handleDiscovery(draft);
+    }
+  };
+
+  const postTweet = async (text) => {
+    console.log("🚀 Posting to X...");
+    try {
+      const client = initClient();
+      await client.v2.tweet(text);
+      console.log("✅ Posted successfully!");
+    } catch (err) {
+      console.error("❌ Failed to post to X:", err.message);
+      if (err.data) console.error("Details:", JSON.stringify(err.data));
     }
   };
 
