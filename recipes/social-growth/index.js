@@ -26,6 +26,13 @@ async function mainLoop() {
       // runAgent now returns the draft object so we can handle it interactively
       const draft = await runAgent();
       
+      if (!draft) {
+        // No more news to draft
+        console.log("👋 Chef is leaving the kitchen. Goodbye!");
+        rl.close();
+        process.exit(0);
+      }
+
       if (draft && draft.status === 'pending') {
         const hasPlaceholder = draft.content.includes("[Your expert take here]");
         
@@ -108,8 +115,8 @@ async function mainLoop() {
   };
 
   const promptAction = async () => {
-    const choice = await rl.question("\nNext Action: [r] Run Again | [q] Quit & Exit: ");
-    if (choice.toLowerCase() === 'r') {
+    const choice = await rl.question("\nMenu: [n] Next (Check for new news) | [q] Quit & Exit: ");
+    if (choice.toLowerCase() === 'n') {
       await startLoop();
     } else if (choice.toLowerCase() === 'q') {
       console.log("👋 Chef is leaving the kitchen. Goodbye!");

@@ -82,8 +82,8 @@ export const runAgent = async () => {
   const freshItems = newsItems.filter(item => !draftedUrls.includes(item.link));
 
   if (freshItems.length === 0) {
-    console.log("✅ All news items already drafted.");
-    return;
+    console.log("✅ All news items already drafted. Check back later for new stories!");
+    return null;
   }
 
   const topItem = freshItems[0];
