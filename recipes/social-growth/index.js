@@ -31,7 +31,14 @@ async function mainLoop() {
         console.log(draft.content);
         console.log("------------------------");
         
-        const action = await rl.question("\nOptions: [e] Edit Take | [a] Approve & Post | [s] Skip: ");
+        const hasPlaceholder = draft.content.includes("[Your expert take here]");
+        
+        let action;
+        if (hasPlaceholder) {
+          action = await rl.question("\nThis draft needs your insight. \nOptions: [e] Add Expert Take | [s] Skip for now | [q] Quit: ");
+        } else {
+          action = await rl.question("\nOptions: [a] Approve & Post | [e] Edit | [s] Skip | [q] Quit: ");
+        }
         
         if (action.toLowerCase() === 'e') {
           const newTake = await rl.question("Enter your expert take: ");
@@ -46,8 +53,17 @@ async function mainLoop() {
             console.log("✅ Posted successfully! (Simulated)");
           }
         } else if (action.toLowerCase() === 'a') {
-          console.log("🚀 Posting original draft to X...");
-          console.log("✅ Posted successfully! (Simulated)");
+          if (hasPlaceholder) {
+            console.log("\n⚠️ Cannot approve: Draft still contains the '[Your expert take here]' placeholder.");
+            console.log("Please use [e] to add your insight first.");
+          } else {
+            console.log("🚀 Posting to X...");
+            console.log("✅ Posted successfully! (Simulated)");
+          }
+        } else if (action.toLowerCase() === 'q') {
+          console.log("👋 Chef is leaving the kitchen. Goodbye!");
+          rl.close();
+          process.exit(0);
         } else {
           console.log("⏭️ Draft skipped.");
         }
