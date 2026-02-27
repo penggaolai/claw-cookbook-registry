@@ -13,6 +13,7 @@ npx claw-cookbook use [recipe-name]
 Browse the `recipes/` folder to see the source code for our community-vetted agents:
 
 - **[Social Growth Agent](./recipes/social-growth)**: Auto-curates niche news from Google News AI Scout RSS feeds (AI, Healthcare, UI) and drafts insightful commentary. Perfect for building authority.
+- **[The Grandmaster](./recipes/tic-tac-toe)**: A stateful gaming agent. Play Tic-Tac-Toe against a bot that learns your moves. Supports local and social play.
 
 ## 👨‍🍳 Do It Yourself (Manual Installation)
 If you prefer not to use the CLI, you can set up recipes manually:
@@ -38,7 +39,7 @@ If you prefer not to use the CLI, you can set up recipes manually:
    OPENAI_API_KEY=your_key_here
    ANTHROPIC_API_KEY=your_key_here
 
-   # X (Twitter) API Credentials
+   # X (Twitter) API Credentials (Required for social agents)
    X_API_KEY=your_consumer_key
    X_API_SECRET=your_consumer_secret
    X_ACCESS_TOKEN=your_access_token
@@ -49,11 +50,10 @@ If you prefer not to use the CLI, you can set up recipes manually:
    npm start
    ```
 
-## 🗺️ Roadmap
-We are building the future of autonomous agent distribution. Upcoming features include:
-- **Multi-Social Support**: Native adapters for LinkedIn, Mastodon, and Bluesky.
-- **OpenClaw Gateway Integration**: Native integration with OpenClaw Gateway for centralized model orchestration and OAuth management.
-- **Recipe Marketplace**: Verified premium recipes with secure license key delivery.
+## 🛠️ Platform Architecture (Internal)
+The Claw Cookbook uses a **Live Registry** model:
+- **Recipes**: Updates to recipes are pushed directly to this GitHub repository. They are immediately available via the CLI once pushed—no npm publish required for new recipes.
+- **CLI Tool**: The `claw-cookbook` npm package is the delivery engine. It only needs a republish when the core installation logic or configuration prompts are updated.
 
 ## 🤝 How to Contribute
 Want to add your own recipe to the cookbook?
