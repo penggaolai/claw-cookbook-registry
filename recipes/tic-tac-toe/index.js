@@ -68,7 +68,6 @@ async function checkAndReply(state) {
       'expansions': ['author_id']
     });
 
-    // Fix: Ensure we handle cases where no data is returned or data is not an array
     const tweets = (replies.data && Array.isArray(replies.data)) ? replies.data : [];
     
     const mention = tweets.find(t => 
@@ -113,8 +112,18 @@ async function runSocialGame() {
   
   if (state) {
     console.log("📍 Found an active game.");
-    const resume = await rl.question("Resume existing match? [y/n]: ");
-    if (resume.toLowerCase() !== 'y') state = null;
+    let validResume = false;
+    while (!validResume) {
+      const resume = await rl.question("Resume existing match? [y/n]: ");
+      if (resume.toLowerCase() === 'y') {
+        validResume = true;
+      } else if (resume.toLowerCase() === 'n') {
+        state = null;
+        validResume = true;
+      } else {
+        console.log("⚠️ Invalid input. Please enter 'y' for yes or 'n' for no.");
+      }
+    }
   }
 
   if (!state) {
