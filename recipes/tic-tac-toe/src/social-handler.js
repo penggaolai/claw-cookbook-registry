@@ -32,9 +32,11 @@ export const replyWithBoard = async (tweetId, userHandle, game) => {
   const text = `@${userHandle} Great move! Here is my counter-play: \n\n${board}\nYour turn! #ClawCookbook`;
   
   try {
-    await client.v2.tweet(text, { reply: { in_reply_to_tweet_id: tweetId } });
+    const resp = await client.v2.tweet(text, { reply: { in_reply_to_tweet_id: tweetId } });
     console.log(`✅ Replied to @${userHandle}`);
+    return resp.data.id;
   } catch (err) {
     console.error("❌ Failed to reply on X:", err.message);
+    return null;
   }
 };
