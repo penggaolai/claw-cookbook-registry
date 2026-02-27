@@ -1,13 +1,42 @@
 import { TicTacToe } from './src/engine.js';
+import { parseMove, replyWithBoard } from './src/social-handler.js';
 import readline from 'node:readline/promises';
 import process from 'node:process';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-async function gameLoop() {
+const isSocialMode = process.env.X_MODE === 'SOCIAL';
+
+async function main() {
+  if (isSocialMode) {
+    console.log("\n🎮 'The Grandmaster' is starting in SOCIAL MODE.");
+    console.log("----------------------------------------------");
+    console.log("Instructions: The agent will post a board to X.");
+    console.log("When a user replies with a move, it will counter and reply back.");
+    
+    // For the "Chef-in-the-loop" experience, let's start a game
+    const game = new TicTacToe();
+    console.log("\nStarting a fresh community match...");
+    console.log(game.renderBoard());
+    
+    const confirm = await rl.question("\nPost initial challenge to X? [y/n]: ");
+    if (confirm.toLowerCase() === 'y') {
+       console.log("🚀 Posting initial board to X... (Simulated until next loop)");
+       // In a full implementation, this triggers the background listener
+    }
+  } else {
+    // Local Terminal Loop (Existing)
+    await runLocalGame();
+  }
+}
+
+async function runLocalGame() {
   const game = new TicTacToe();
   console.log("\n🎮 Welcome to 'The Grandmaster' Tic-Tac-Toe!");
   console.log("------------------------------------------");
@@ -44,7 +73,6 @@ async function gameLoop() {
       continue;
     }
 
-    // Bot move (Simple AI: Random available move)
     const available = game.getAvailableMoves();
     if (available.length > 0) {
       const botMove = available[Math.floor(Math.random() * available.length)];
@@ -52,9 +80,8 @@ async function gameLoop() {
       console.log(`\n🤖 Bot plays at position ${botMove}`);
     }
   }
-
   console.log("\nThanks for playing! 👋");
   rl.close();
 }
 
-gameLoop().catch(console.error);
+main().catch(console.error);
