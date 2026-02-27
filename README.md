@@ -12,7 +12,7 @@ npx claw-cookbook use [recipe-name]
 ## 🍳 Available Recipes
 Browse the `recipes/` folder to see the source code for our community-vetted agents:
 
-- **[Social Growth Agent](./recipes/social-growth)**: Auto-curates niche news (AI, Healthcare, UI) and drafts insightful commentary.
+- **[Social Growth Agent](./recipes/social-growth)**: Auto-curates niche news from Google News AI Scout RSS feeds (AI, Healthcare, UI) and drafts insightful commentary. Perfect for building authority.
 
 ## 👨‍🍳 Do It Yourself (Manual Installation)
 If you prefer not to use the CLI, you can set up recipes manually:

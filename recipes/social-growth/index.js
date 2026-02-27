@@ -44,8 +44,9 @@ async function mainLoop() {
     const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[1] || "";
 
     console.log("\n--- 📰 TOP STORY DISCOVERED ---");
-    console.log(`Title: ${newsTitle}`);
-    console.log(`Link:  ${newsLink}`);
+    console.log(`Title:  ${newsTitle}`);
+    console.log(`Link:   ${newsLink}`);
+    console.log(`Source: Google News AI Scout`);
     console.log("-------------------------------");
     
     let action;
