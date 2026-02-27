@@ -22,7 +22,6 @@ async function setup() {
 
   if (command !== 'use' || !recipeName) {
     console.log("\nUsage: npx claw-cookbook use [recipe-name] [--key=YOUR_LICENSE_KEY]");
-    console.log("Example (Free): npx claw-cookbook use social-growth");
     process.exit(0);
   }
 
@@ -57,14 +56,8 @@ async function setup() {
 
   // 2. Clone/Copy Recipe Files
   console.log("📦 Fetching ingredients from Registry...");
-  
   const tempDir = path.join(process.cwd(), `.temp-recipe-${Date.now()}`);
-  const gitClone = spawnSync('git', ['clone', '--depth', '1', REGISTRY_URL, tempDir], { stdio: 'inherit' });
-
-  if (gitClone.status !== 0) {
-    console.error("❌ Failed to clone registry.");
-    process.exit(1);
-  }
+  spawnSync('git', ['clone', '--depth', '1', REGISTRY_URL, tempDir], { stdio: 'inherit' });
 
   const recipeSource = path.join(tempDir, 'recipes', recipeName);
   
@@ -87,20 +80,39 @@ async function setup() {
   // 3. Configure .env
   console.log("\n🧂 Adding seasoning (Configuration)...");
   
-  console.log("\n--- X (Twitter) API Credentials ---");
-  const xApiKey = await rl.question("API Key (Consumer Key): ");
-  const xApiSecret = await rl.question("API Key Secret (Consumer Secret): ");
-  const xAccessToken = await rl.question("Access Token: ");
-  const xAccessTokenSecret = await rl.question("Access Token Secret: ");
+  let envContent = "";
 
-  console.log("\n--- AI Provider Credentials ---");
-  const aiKey = await rl.question("AI Provider API Key (Gemini/OpenAI): ");
+  if (recipeName === 'tic-tac-toe') {
+    // Gaming recipes might not need X initially if they are local
+    console.log("🎮 This is a gaming recipe. Local play enabled.");
+    const aiKey = await rl.question("AI Provider API Key (Optional for simple bots): ");
+    envContent = `AI_API_KEY=${aiKey}\n`;
+  } else {
+    console.log("\n--- AI Provider Selection ---");
+    console.log("[1] Gemini (Recommended)");
+    console.log("[2] OpenAI");
+    console.log("[3] Anthropic");
+    const providerChoice = await rl.question("Select your Brain: ");
+    
+    let aiKeyName = "GEMINI_API_KEY";
+    if (providerChoice === '2') aiKeyName = "OPENAI_API_KEY";
+    if (providerChoice === '3') aiKeyName = "ANTHROPIC_API_KEY";
 
-  let envContent = `X_API_KEY=${xApiKey}
-X_API_SECRET=${xApiSecret}
-X_ACCESS_TOKEN=${xAccessToken}
-X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}
-AI_API_KEY=${aiKey}\n`;
+    const aiKey = await rl.question(`${aiKeyName}: `);
+
+    console.log("\n--- X (Twitter) API Credentials ---");
+    const xApiKey = await rl.question("API Key: ");
+    const xApiSecret = await rl.question("API Key Secret: ");
+    const xAccessToken = await rl.question("Access Token: ");
+    const xAccessTokenSecret = await rl.question("Access Token Secret: ");
+
+    envContent = `AI_PROVIDER=${aiKeyName.replace('_API_KEY', '')}\n`;
+    envContent += `${aiKeyName}=${aiKey}\n`;
+    envContent += `X_API_KEY=${xApiKey}\n`;
+    envContent += `X_API_SECRET=${xApiSecret}\n`;
+    envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
+    envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+  }
 
   if (isPremium) envContent += `CLAW_LICENSE_KEY=${licenseKey}\n`;
 
@@ -117,10 +129,6 @@ AI_API_KEY=${aiKey}\n`;
   console.log(`npm start\n`);
 
   rl.close();
-  process.exit(0);
 }
 
-setup().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+setup().catch(console.error);
