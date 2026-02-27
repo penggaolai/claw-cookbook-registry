@@ -12,6 +12,11 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+// Ensure config is loaded
+if (!config.twitter.appKey || !config.twitter.appSecret) {
+  console.warn("⚠️ Twitter API keys missing! Please check .env file.");
+}
+
 async function mainLoop() {
   console.log("\n🦞 Claw Social Agent Starting...");
   console.log("----------------------------------");
@@ -19,11 +24,13 @@ async function mainLoop() {
   const startLoop = async () => {
     try {
       const draft = await runAgent();
+      
       if (!draft) {
         console.log("👋 Chef is leaving the kitchen. Goodbye!");
         rl.close();
         process.exit(0);
       }
+
       await handleDiscovery(draft);
     } catch (err) {
       console.error("❌ Error in agent run:", err.message);
@@ -43,9 +50,9 @@ async function mainLoop() {
     
     let action;
     if (hasPlaceholder) {
-      action = await rl.question("\nOptions: [v] View Draft | [a] Add Insight | [s] Skip | [q] Quit: ");
+      action = await rl.question("\nOptions: [v] View Draft | [a] Add Insight | [n] Next Story | [q] Quit: ");
     } else {
-      action = await rl.question("\nOptions: [p] Post to X | [v] View Draft | [a] Edit Insight | [s] Skip | [q] Quit: ");
+      action = await rl.question("\nOptions: [p] Post to X | [v] View Draft | [a] Edit Insight | [n] Next Story | [q] Quit: ");
     }
 
     action = action.toLowerCase();
@@ -56,13 +63,12 @@ async function mainLoop() {
       console.log("------------------------");
       return handleDiscovery(draft);
     } else if (action === 'a') {
-      const newsTitle = draft.content.split('\n')[0];
-      const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[0] || "";
+      const fullTitle = draft.content.split('\n')[0];
+      const linkMatch = draft.content.match(/🔗 (https?:\/\/[^\s]+)/);
+      const newsLinkFull = linkMatch ? linkMatch[0] : "";
       const tags = draft.content.split('\n').pop();
       
-      // Calculate how much room we actually have for the insight
-      // newsTitle + "\n\nMy take: " + insight + "\n\n" + newsLink + " " + tags
-      const fixedPartsLength = newsTitle.length + 12 + 2 + 23 + 1 + tags.length; 
+      const fixedPartsLength = fullTitle.length + 12 + 2 + 23 + 1 + tags.length; 
       const maxInsightLength = 280 - fixedPartsLength;
 
       console.log(`\nNote: To stay under X's limit, your insight should be under ${maxInsightLength} characters.`);
@@ -70,7 +76,6 @@ async function mainLoop() {
       
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
       
-      // X.com character limit check (links count as 23 chars)
       const urlRegex = /https?:\/\/[^\s]+/g;
       const links = updatedContent.match(urlRegex) || [];
       let calculatedLength = updatedContent.replace(urlRegex, '').length + (links.length * 23);
@@ -87,8 +92,8 @@ async function mainLoop() {
       
       const confirm = await rl.question("\nEverything looks good and ready to be posted to X? [y/n]: ");
       if (confirm.toLowerCase() === 'y') {
-        await postTweet(draft.content);
-        return promptAction();
+        await postTweet(updatedContent);
+        return startLoop();
       } else {
         console.log("⏭️ Post cancelled.");
         return handleDiscovery(draft);
@@ -99,15 +104,15 @@ async function mainLoop() {
         return handleDiscovery(draft);
       } else {
         await postTweet(draft.content);
-        return promptAction();
+        return startLoop();
       }
     } else if (action === 'q') {
       console.log("👋 Chef is leaving the kitchen. Goodbye!");
       rl.close();
       process.exit(0);
-    } else if (action === 's') {
-      console.log("⏭️ Draft skipped.");
-      return promptAction();
+    } else if (action === 'n') {
+      console.log("⏭️ Skipping to next story...");
+      return startLoop();
     } else {
       console.log("⚠️ Invalid input. Please try again.");
       return handleDiscovery(draft);
