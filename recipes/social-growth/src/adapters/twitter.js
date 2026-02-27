@@ -6,16 +6,21 @@ import fs from 'fs/promises';
 dotenv.config();
 
 export const initClient = () => {
-  if (!process.env.X_API_KEY || !process.env.X_API_SECRET) {
+  const appKey = (process.env.X_API_KEY || "").trim();
+  const appSecret = (process.env.X_API_SECRET || "").trim();
+  const accessToken = (process.env.X_ACCESS_TOKEN || "").trim();
+  const accessSecret = (process.env.X_ACCESS_TOKEN_SECRET || "").trim();
+
+  if (!appKey || !appSecret || !accessToken || !accessSecret) {
     console.error("❌ Missing Twitter API keys in .env!");
     process.exit(1);
   }
 
   return new TwitterApi({
-    appKey: process.env.X_API_KEY,
-    appSecret: process.env.X_API_SECRET,
-    accessToken: process.env.X_ACCESS_TOKEN,
-    accessSecret: process.env.X_ACCESS_TOKEN_SECRET,
+    appKey,
+    appSecret,
+    accessToken,
+    accessSecret,
   });
 };
 
@@ -27,6 +32,7 @@ export const postTweet = async (text) => {
     console.log("✅ Posted successfully!");
   } catch (err) {
     console.error("❌ Failed to post to X:", err.message);
+    if (err.data) console.error("Details:", JSON.stringify(err.data));
   }
 };
 
