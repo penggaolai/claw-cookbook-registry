@@ -68,7 +68,8 @@ async function checkAndReply(state) {
       'expansions': ['author_id']
     });
 
-    const mention = (replies.data || []).find(t => 
+    const tweets = Array.isArray(replies.data) ? replies.data : [];
+    const mention = tweets.find(t => 
       t.referenced_tweets?.some(ref => ref.type === 'replied_to' && ref.id === lastTweetId)
     );
 
