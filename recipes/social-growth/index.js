@@ -58,11 +58,21 @@ async function mainLoop() {
     } else if (action === 'a') {
       const newInsight = await rl.question("Enter your expert insight: ");
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
-      draft.content = updatedContent;
       
-      console.log("\n--- 🧐 FINAL REVIEW ---");
+      // X.com character limit check (links count as 23 chars)
+      const urlRegex = /https?:\/\/[^\s]+/g;
+      const links = updatedContent.match(urlRegex) || [];
+      let calculatedLength = updatedContent.replace(urlRegex, '').length + (links.length * 23);
+      
+      console.log(`\n--- 🧐 FINAL REVIEW (${calculatedLength}/280 chars) ---`);
       console.log(updatedContent);
       console.log("-----------------------");
+      
+      if (calculatedLength > 280) {
+        console.log(`⚠️  Tweet is too long by ${calculatedLength - 280} characters!`);
+        console.log("Please shorten your insight and try again.");
+        return handleDiscovery(draft);
+      }
       
       const confirm = await rl.question("\nEverything looks good and ready to be posted to X? [y/n]: ");
       if (confirm.toLowerCase() === 'y') {
