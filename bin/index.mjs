@@ -83,10 +83,29 @@ async function setup() {
   let envContent = "";
 
   if (recipeName === 'tic-tac-toe') {
-    // Gaming recipes might not need X initially if they are local
-    console.log("🎮 This is a gaming recipe. Local play enabled.");
-    const aiKey = await rl.question("AI Provider API Key (Optional for simple bots): ");
+    console.log("🎮 This is a gaming recipe.");
+    console.log("[1] Local Play (Terminal only)");
+    console.log("[2] Social Play (Post & Reply on X)");
+    const gameMode = await rl.question("Select mode: ");
+
+    const aiKey = await rl.question("\nAI Provider API Key (Recommended for LLM opponents): ");
     envContent = `AI_API_KEY=${aiKey}\n`;
+
+    if (gameMode === '2') {
+      console.log("\n--- X (Twitter) API Credentials ---");
+      const xApiKey = await rl.question("API Key: ");
+      const xApiSecret = await rl.question("API Key Secret: ");
+      const xAccessToken = await rl.question("Access Token: ");
+      const xAccessTokenSecret = await rl.question("Access Token Secret: ");
+
+      envContent += `X_MODE=SOCIAL\n`;
+      envContent += `X_API_KEY=${xApiKey}\n`;
+      envContent += `X_API_SECRET=${xApiSecret}\n`;
+      envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
+      envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+    } else {
+      envContent += `X_MODE=LOCAL\n`;
+    }
   } else {
     console.log("\n--- AI Provider Selection ---");
     console.log("[1] Gemini (Recommended)");
