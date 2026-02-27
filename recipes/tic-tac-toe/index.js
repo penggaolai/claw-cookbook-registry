@@ -1,7 +1,9 @@
 import { TicTacToe } from './src/engine.js';
 import { parseMove, replyWithBoard } from './src/social-handler.js';
+import { initClient } from '../social-growth/src/adapters/twitter.js';
 import readline from 'node:readline/promises';
 import process from 'node:process';
+import fs from 'fs/promises';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,28 +13,123 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const isSocialMode = process.env.X_MODE === 'SOCIAL';
+const STATE_FILE = '.game_state.json';
 
 async function main() {
+  const isSocialMode = process.env.X_MODE === 'SOCIAL';
+
   if (isSocialMode) {
-    console.log("\n🎮 'The Grandmaster' is starting in SOCIAL MODE.");
-    console.log("----------------------------------------------");
-    console.log("Instructions: The agent will post a board to X.");
-    console.log("When a user replies with a move, it will counter and reply back.");
-    
-    // For the "Chef-in-the-loop" experience, let's start a game
-    const game = new TicTacToe();
-    console.log("\nStarting a fresh community match...");
-    console.log(game.renderBoard());
-    
-    const confirm = await rl.question("\nPost initial challenge to X? [y/n]: ");
-    if (confirm.toLowerCase() === 'y') {
-       console.log("🚀 Posting initial board to X... (Simulated until next loop)");
-       // In a full implementation, this triggers the background listener
-    }
+    await runSocialGame();
   } else {
-    // Local Terminal Loop (Existing)
     await runLocalGame();
+  }
+}
+
+async function loadGameState() {
+  try {
+    const data = await fs.readFile(STATE_FILE, 'utf-8');
+    const state = JSON.parse(data);
+    const game = new TicTacToe();
+    game.board = state.board;
+    return { game, lastTweetId: state.lastTweetId };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function saveGameState(board, lastTweetId) {
+  await fs.writeFile(STATE_FILE, JSON.stringify({ board, lastTweetId }, null, 2));
+}
+
+async function checkAndReply(state) {
+  const { game, lastTweetId } = state;
+  const client = initClient();
+
+  console.log(`\n📡 [${new Date().toLocaleTimeString()}] Checking for replies to: ${lastTweetId}...`);
+
+  try {
+    const replies = await client.v2.search(`to:penggaolai`, {
+      'tweet.fields': ['referenced_tweets', 'author_id', 'text'],
+      'expansions': ['author_id']
+    });
+
+    const mention = (replies.data || []).find(t => 
+      t.referenced_tweets?.some(ref => ref.type === 'replied_to' && ref.id === lastTweetId)
+    );
+
+    if (mention) {
+      console.log(`🎯 Found move: "${mention.text}"`);
+      const userMove = parseMove(mention.text);
+      
+      if (userMove !== null && game.makeMove(userMove, '❌')) {
+        const available = game.getAvailableMoves();
+        if (available.length > 0) {
+          const botMove = available[Math.floor(Math.random() * available.length)];
+          game.makeMove(botMove, '⭕');
+        }
+
+        const user = replies.includes.users.find(u => u.id === mention.author_id);
+        const newTweetId = await replyWithBoard(mention.id, user.username, game);
+        
+        if (newTweetId) {
+          state.lastTweetId = newTweetId;
+          await saveGameState(game.board, newTweetId);
+          console.log(`✅ Game Progressed! New Tweet: ${newTweetId}`);
+        }
+      } else {
+        console.log("⚠️ Invalid move or position taken.");
+      }
+    } else {
+      console.log("💤 No new valid moves yet.");
+    }
+  } catch (err) {
+    console.error("❌ Listener error:", err.message);
+  }
+}
+
+async function runSocialGame() {
+  console.log("\n🎮 'The Grandmaster' Social Mode Active");
+  console.log("---------------------------------------");
+
+  let state = await loadGameState();
+  
+  if (state) {
+    console.log("📍 Found an active game.");
+    const resume = await rl.question("Resume existing match? [y/n]: ");
+    if (resume.toLowerCase() !== 'y') state = null;
+  }
+
+  if (!state) {
+    console.log("\n🚀 Serving a new community challenge to X...");
+    const game = new TicTacToe();
+    const client = initClient();
+    const board = game.renderBoard();
+    const text = `🎮 I challenge you to a game of Tic-Tac-Toe!\n\nI'll start with ⭕ in the center. \n\n${board.replace('⬛', '⭕')}\n\nReply with your move (e.g., 'Top Left' or '0') to play! \n#AI #GameNight #ClawCookbook`;
+
+    try {
+      const resp = await client.v2.tweet(text);
+      state = { game, lastTweetId: resp.data.id };
+      state.game.board[4] = '⭕';
+      await saveGameState(state.game.board, state.lastTweetId);
+      console.log(`✅ Match Posted! Tweet ID: ${state.lastTweetId}`);
+    } catch (err) {
+      console.error("❌ Failed to post game:", err.message);
+      process.exit(1);
+    }
+  }
+
+  console.log("\n📡 Background listener started.");
+  console.log("Type [q] to quit at any time (game state will be saved).");
+
+  // Run the polling in the same process
+  const poll = setInterval(() => checkAndReply(state), 2 * 60 * 1000);
+  checkAndReply(state); // Initial check
+
+  const input = await rl.question("");
+  if (input.toLowerCase() === 'q') {
+    clearInterval(poll);
+    console.log("👋 Shutting down. State preserved.");
+    process.exit(0);
   }
 }
 
