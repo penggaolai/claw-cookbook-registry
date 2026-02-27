@@ -1,18 +1,8 @@
-import { initClient } from '../../src/adapters/twitter.js';
-
-export const listenForMoves = async (gameId) => {
-  console.log(`📡 Listening for moves on X for Game ID: ${gameId}...`);
-  const client = initClient();
-  
-  // In a real implementation, we would use v2 search to find replies to the game tweet
-  // For this recipe, we'll implement the logic that processes a reply once found
-  return null; 
-};
+import { initClient } from '../index.js';
 
 export const parseMove = (text) => {
   const normalized = text.toLowerCase();
   
-  // Simple mapping for common natural language moves
   if (normalized.includes("top left") || normalized.includes("0")) return 0;
   if (normalized.includes("top center") || normalized.includes("1")) return 1;
   if (normalized.includes("top right") || normalized.includes("2")) return 2;

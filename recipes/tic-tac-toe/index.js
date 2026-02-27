@@ -1,10 +1,10 @@
 import { TicTacToe } from './src/engine.js';
 import { parseMove, replyWithBoard } from './src/social-handler.js';
-import { initClient } from '../social-growth/src/adapters/twitter.js';
 import readline from 'node:readline/promises';
 import process from 'node:process';
 import fs from 'fs/promises';
 import dotenv from 'dotenv';
+import { TwitterApi } from 'twitter-api-v2';
 
 dotenv.config();
 
@@ -14,6 +14,21 @@ const rl = readline.createInterface({
 });
 
 const STATE_FILE = '.game_state.json';
+
+// Shared Client Init for this recipe
+export const initClient = () => {
+  const appKey = (process.env.X_API_KEY || "").trim();
+  const appSecret = (process.env.X_API_SECRET || "").trim();
+  const accessToken = (process.env.X_ACCESS_TOKEN || "").trim();
+  const accessSecret = (process.env.X_ACCESS_TOKEN_SECRET || "").trim();
+
+  if (!appKey || !appSecret || !accessToken || !accessSecret) {
+    console.error("❌ Missing Twitter API keys in .env!");
+    process.exit(1);
+  }
+
+  return new TwitterApi({ appKey, appSecret, accessToken, accessSecret });
+};
 
 async function main() {
   const isSocialMode = process.env.X_MODE === 'SOCIAL';
@@ -121,9 +136,8 @@ async function runSocialGame() {
   console.log("\n📡 Background listener started.");
   console.log("Type [q] to quit at any time (game state will be saved).");
 
-  // Run the polling in the same process
   const poll = setInterval(() => checkAndReply(state), 2 * 60 * 1000);
-  checkAndReply(state); // Initial check
+  checkAndReply(state); 
 
   const input = await rl.question("");
   if (input.toLowerCase() === 'q') {
@@ -137,18 +151,14 @@ async function runLocalGame() {
   const game = new TicTacToe();
   console.log("\n🎮 Welcome to 'The Grandmaster' Tic-Tac-Toe!");
   console.log("------------------------------------------");
-  console.log("Commands: [0-8] to move | [q] Quit\n");
-
-  const boardMap = `
+  console.log("Board Layout Guide:");
+  console.log(`
     0 | 1 | 2
     ---------
     3 | 4 | 5
     ---------
     6 | 7 | 8
-  `;
-
-  console.log("Board Layout Guide:");
-  console.log(boardMap);
+  `);
 
   while (true) {
     console.log("\nCurrent Board:");
