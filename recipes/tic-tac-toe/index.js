@@ -68,7 +68,9 @@ async function checkAndReply(state) {
       'expansions': ['author_id']
     });
 
-    const tweets = Array.isArray(replies.data) ? replies.data : [];
+    // Fix: Ensure we handle cases where no data is returned or data is not an array
+    const tweets = (replies.data && Array.isArray(replies.data)) ? replies.data : [];
+    
     const mention = tweets.find(t => 
       t.referenced_tweets?.some(ref => ref.type === 'replied_to' && ref.id === lastTweetId)
     );
