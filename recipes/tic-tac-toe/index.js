@@ -1,5 +1,6 @@
 import { TicTacToe } from './src/engine.js';
 import { parseMove, replyWithBoard } from './src/social-handler.js';
+import { initClient } from './index.js'; // Note: circular import check
 import readline from 'node:readline/promises';
 import process from 'node:process';
 import fs from 'fs/promises';
@@ -15,7 +16,7 @@ const rl = readline.createInterface({
 
 const STATE_FILE = '.game_state.json';
 
-// Shared Client Init for this recipe
+// Shared Client Init
 export const initClient = () => {
   const appKey = (process.env.X_API_KEY || "").trim();
   const appSecret = (process.env.X_API_SECRET || "").trim();
@@ -56,20 +57,31 @@ async function saveGameState(board, lastTweetId) {
   await fs.writeFile(STATE_FILE, JSON.stringify({ board, lastTweetId }, null, 2));
 }
 
-async function checkAndReply(state) {
+async function checkAndReply(state, stopCallback) {
   const { game, lastTweetId } = state;
   const client = initClient();
 
   console.log(`\n📡 [${new Date().toLocaleTimeString()}] Checking for replies to: ${lastTweetId}...`);
 
   try {
+    // 1. Verify the parent tweet still exists
+    try {
+      await client.v2.singleTweet(lastTweetId);
+    } catch (e) {
+      if (e.code === 404 || (e.data && e.data.errors?.some(err => err.title === 'Not Found Error'))) {
+        console.log("\n⚠️ The current match tweet has been deleted or is inaccessible.");
+        stopCallback();
+        return;
+      }
+    }
+
+    // 2. Search for replies
     const replies = await client.v2.search(`to:penggaolai`, {
       'tweet.fields': ['referenced_tweets', 'author_id', 'text'],
       'expansions': ['author_id']
     });
 
     const tweets = (replies.data && Array.isArray(replies.data)) ? replies.data : [];
-    
     const mention = tweets.find(t => 
       t.referenced_tweets?.some(ref => ref.type === 'replied_to' && ref.id === lastTweetId)
     );
@@ -148,14 +160,22 @@ async function runSocialGame() {
   console.log("\n📡 Background listener started.");
   console.log("Type [q] to quit at any time (game state will be saved).");
 
-  const poll = setInterval(() => checkAndReply(state), 2 * 60 * 1000);
-  checkAndReply(state); 
+  const stopListener = () => {
+    clearInterval(poll);
+    console.log("\nPress [Enter] to return to the main menu...");
+  };
+
+  const poll = setInterval(() => checkAndReply(state, stopListener), 2 * 60 * 1000);
+  checkAndReply(state, stopListener); 
 
   const input = await rl.question("");
   if (input.toLowerCase() === 'q') {
     clearInterval(poll);
     console.log("👋 Shutting down. State preserved.");
     process.exit(0);
+  } else if (!poll._idleTimeout) {
+     // Listener was stopped by checkAndReply
+     await runSocialGame(); // Recursively restart
   }
 }
 
