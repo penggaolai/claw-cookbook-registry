@@ -23,18 +23,37 @@ If you prefer not to use the CLI, you can set up recipes manually:
    ```
 2. **Navigate to your chosen recipe**:
    ```bash
-   cd claw-cookbook-registry/recipes/social-growth
+   cd recipes/social-growth
    ```
 3. **Install dependencies**:
    ```bash
    npm install
    ```
 4. **Configure your environment**:
-   Create a `.env` file based on the requirements in the recipe folder (usually requires X/Twitter and AI API keys).
+   Create a `.env` file in the recipe folder with the following variables:
+   ```env
+   # AI Brain Configuration
+   AI_PROVIDER=GEMINI # Options: GEMINI, OPENAI, ANTHROPIC
+   GEMINI_API_KEY=your_key_here
+   OPENAI_API_KEY=your_key_here
+   ANTHROPIC_API_KEY=your_key_here
+
+   # X (Twitter) API Credentials
+   X_API_KEY=your_consumer_key
+   X_API_SECRET=your_consumer_secret
+   X_ACCESS_TOKEN=your_access_token
+   X_ACCESS_TOKEN_SECRET=your_access_token_secret
+   ```
 5. **Start cooking**:
    ```bash
    npm start
    ```
+
+## 🗺️ Roadmap
+We are building the future of autonomous agent distribution. Upcoming features include:
+- **Multi-Social Support**: Native adapters for LinkedIn, Mastodon, and Bluesky.
+- **OpenClaw Gateway Integration**: Native integration with OpenClaw Gateway for centralized model orchestration and OAuth management.
+- **Recipe Marketplace**: Verified premium recipes with secure license key delivery.
 
 ## 🤝 How to Contribute
 Want to add your own recipe to the cookbook?
