@@ -1,0 +1,10 @@
+{
+  "name": "The Grandmaster",
+  "version": "1.0.0",
+  "description": "A stateful gaming agent. Play Tic-Tac-Toe against a bot that learns your moves. Perfect for high-engagement social interaction.",
+  "author": "Gaolai",
+  "price": "Free",
+  "category": "gaming",
+  "entrypoint": "index.js",
+  "tags": ["gaming", "stateful", "interactive", "ai"]
+}
