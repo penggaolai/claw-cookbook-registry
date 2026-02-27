@@ -56,7 +56,18 @@ async function mainLoop() {
       console.log("------------------------");
       return handleDiscovery(draft);
     } else if (action === 'a') {
-      const newInsight = await rl.question("Enter your expert insight: ");
+      const newsTitle = draft.content.split('\n')[0];
+      const newsLink = draft.content.match(/🔗 (https?:\/\/[^\s]+)/)?.[0] || "";
+      const tags = draft.content.split('\n').pop();
+      
+      // Calculate how much room we actually have for the insight
+      // newsTitle + "\n\nMy take: " + insight + "\n\n" + newsLink + " " + tags
+      const fixedPartsLength = newsTitle.length + 12 + 2 + 23 + 1 + tags.length; 
+      const maxInsightLength = 280 - fixedPartsLength;
+
+      console.log(`\nNote: To stay under X's limit, your insight should be under ${maxInsightLength} characters.`);
+      const newInsight = await rl.question(`Enter your expert insight (max ${maxInsightLength}): `);
+      
       const updatedContent = draft.content.replace("[Your expert take here]", newInsight);
       
       // X.com character limit check (links count as 23 chars)
