@@ -1,6 +1,6 @@
 {
   "name": "claw-cookbook",
-  "version": "0.1.0",
+  "version": "0.3.8",
   "description": "The official CLI for installing autonomous agent recipes from the Claw Cookbook.",
   "type": "module",
   "bin": {
@@ -20,6 +20,9 @@
     "recipes",
     "cookbook"
   ],
+  "scripts": {
+    "deploy": "echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && npm publish --access public && rm .npmrc"
+  },
   "author": "Gaolai",
   "license": "MIT",
   "repository": {
