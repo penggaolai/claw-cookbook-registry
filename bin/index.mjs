@@ -14,16 +14,6 @@ const REGISTRY_URL = "https://github.com/penggaolai/claw-cookbook-registry.git";
 
 async function setup() {
 
-  async function getIngredients(recipe, currentEnvContent) {
-    // Placeholder for generic ingredient prompting
-    // This can be expanded to read from a recipe-specific config file
-    // For now, let's just ask for a generic ingredient for non-tic-tac-toe recipes
-    if (recipe !== 'tic-tac-toe') {
-      const genericIngredient = await rl.question(`\nWhat's the main ingredient for ${recipe}? (e.g., API Key, Username): `);
-      currentEnvContent += `MAIN_INGREDIENT=${genericIngredient}\n`;
-    }
-    return currentEnvContent;
-  }
 
   console.log("\n🦞 Welcome to the Claw Cookbook Chef's Tool!");
   
@@ -150,7 +140,6 @@ async function setup() {
     envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
   }
 
-  envContent = await getIngredients(recipeName, envContent);
 
   if (isPremium) envContent += `CLAW_LICENSE_KEY=${licenseKey}\n`;
 
