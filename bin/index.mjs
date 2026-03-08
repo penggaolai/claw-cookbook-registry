@@ -13,6 +13,18 @@ const rl = readline.createInterface({
 const REGISTRY_URL = "https://github.com/penggaolai/claw-cookbook-registry.git";
 
 async function setup() {
+
+  async function getIngredients(recipe, currentEnvContent) {
+    // Placeholder for generic ingredient prompting
+    // This can be expanded to read from a recipe-specific config file
+    // For now, let's just ask for a generic ingredient for non-tic-tac-toe recipes
+    if (recipe !== 'tic-tac-toe') {
+      const genericIngredient = await rl.question(`\nWhat's the main ingredient for ${recipe}? (e.g., API Key, Username): `);
+      currentEnvContent += `MAIN_INGREDIENT=${genericIngredient}\n`;
+    }
+    return currentEnvContent;
+  }
+
   console.log("\n🦞 Welcome to the Claw Cookbook Chef's Tool!");
   
   const args = process.argv.slice(2);
@@ -95,8 +107,8 @@ async function setup() {
     console.log("[2] Social Play (Post & Reply on X)");
     const gameMode = await rl.question("Select mode: ");
 
-    // Only prompt for AI Key if game mode is not purely local, or if needed for local bot logic
-    const aiKey = await rl.question("\n--- X (Twitter) API Credentials ---");
+    if (gameMode === '2') {
+      console.log("\n--- X (Twitter) API Credentials ---");
       const xApiKey = await rl.question("API Key: ");
       const xApiSecret = await rl.question("API Key Secret: ");
       const xAccessToken = await rl.question("Access Token: ");
@@ -110,31 +122,36 @@ async function setup() {
     } else {
       envContent += `X_MODE=LOCAL\n`;
     }
-  } else {
-    console.log("\n--- AI Provider Selection ---");
-    console.log("[1] Gemini (Recommended)");
-    console.log("[2] OpenAI");
-    console.log("[3] Anthropic");
-    const providerChoice = await rl.question("Select your Brain: ");
-    
-    let aiKeyName = "GEMINI_API_KEY";
-    if (providerChoice === '2') aiKeyName = "OPENAI_API_KEY";
-    if (providerChoice === '3') aiKeyName = "ANTHROPIC_API_KEY";
+  }
+    }
 
-    const aiKey = await rl.question(`${aiKeyName}: `);
-    envContent = `AI_PROVIDER=${aiKeyName.replace('_API_KEY', '')}\n`;
-    envContent += `${aiKeyName}=${aiKey}\n`;
+  console.log("\n--- AI Provider Selection ---");
+  console.log("[1] Gemini (Recommended)");
+  console.log("[2] OpenAI");
+  console.log("[3] Anthropic");
+  const providerChoice = await rl.question("Select your Brain: ");
+  
+  let aiKeyName = "GEMINI_API_KEY";
+  if (providerChoice === '2') aiKeyName = "OPENAI_API_KEY";
+  if (providerChoice === '3') aiKeyName = "ANTHROPIC_API_KEY";
 
-    if (needsTwitter) {
-      console.log("\n--- X (Twitter) API Credentials ---");
-      const xApiKey = await rl.question("API Key: ");
-      const xApiSecret = await rl.question("API Key Secret: ");
-      const xAccessToken = await rl.question("Access Token: ");
-      const xAccessTokenSecret = await rl.question("Access Token Secret: ");
-      envContent += `X_API_KEY=${xApiKey}\n`;
-      envContent += `X_API_SECRET=${xApiSecret}\n`;
-      envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
-      envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+  const aiKey = await rl.question(`${aiKeyName}: `);
+  envContent += `AI_PROVIDER=${aiKeyName.replace('_API_KEY', '')}\n`;
+  envContent += `${aiKeyName}=${aiKey}\n`;
+
+  if (needsTwitter) {
+    console.log("\n--- X (Twitter) API Credentials ---");
+    const xApiKey = await rl.question("API Key: ");
+    const xApiSecret = await rl.question("API Key Secret: ");
+    const xAccessToken = await rl.question("Access Token: ");
+    const xAccessTokenSecret = await rl.question("Access Token Secret: ");
+    envContent += `X_API_KEY=${xApiKey}\n`;
+    envContent += `X_API_SECRET=${xApiSecret}\n`;
+    envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
+    envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+  }
+
+  envContent = await getIngredients(recipeName, envContent);
     }
   }
 
