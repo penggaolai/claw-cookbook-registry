@@ -1,0 +1,22 @@
+{
+  "name": "the-insight-synthesizer",
+  "version": "1.0.0",
+  "description": "Autonomous agent recipe to synthesize insights from various sources.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai-agent",
+    "openclaw",
+    "recipe",
+    "insight",
+    "summarization"
+  ],
+  "author": "Gaolai",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
