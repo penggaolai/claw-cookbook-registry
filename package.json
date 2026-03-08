@@ -1,6 +1,6 @@
 {
   "name": "claw-cookbook",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "The official CLI for installing autonomous agent recipes from the Claw Cookbook.",
   "type": "module",
   "bin": {
