@@ -89,7 +89,7 @@ async function setup() {
   
   await fs.rm(tempDir, { recursive: true, force: true });
 
-  const recipePath = path.join(tempDir, 'recipes', recipeName);
+  const recipePath = targetDir;
   const manifestPath = path.join(recipePath, 'manifest.json');
   const manifestContent = await fs.readFile(manifestPath, 'utf8');
   const recipeManifest = JSON.parse(manifestContent);
