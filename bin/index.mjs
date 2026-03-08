@@ -77,22 +77,26 @@ async function setup() {
   
   await fs.rm(tempDir, { recursive: true, force: true });
 
+  const recipePath = path.join(tempDir, 'recipes', recipeName);
+  const manifestPath = path.join(recipePath, 'manifest.json');
+  const manifestContent = await fs.readFile(manifestPath, 'utf8');
+  const recipeManifest = JSON.parse(manifestContent);
+
   // 3. Configure .env
   console.log("\n🧂 Adding seasoning (Configuration)...");
   
   let envContent = "";
 
-  if (recipeName === 'tic-tac-toe') {
+  const needsTwitter = recipeManifest.category === 'social';
+
+  if (recipeName === 'tic-tac-toe') { // Tic-tac-toe special case for game mode selection
     console.log("🎮 This is a gaming recipe.");
     console.log("[1] Local Play (Terminal only)");
     console.log("[2] Social Play (Post & Reply on X)");
     const gameMode = await rl.question("Select mode: ");
 
-    const aiKey = await rl.question("\nAI Provider API Key (Recommended for LLM opponents): ");
-    envContent = `AI_API_KEY=${aiKey}\n`;
-
-    if (gameMode === '2') {
-      console.log("\n--- X (Twitter) API Credentials ---");
+    // Only prompt for AI Key if game mode is not purely local, or if needed for local bot logic
+    const aiKey = await rl.question("\n--- X (Twitter) API Credentials ---");
       const xApiKey = await rl.question("API Key: ");
       const xApiSecret = await rl.question("API Key Secret: ");
       const xAccessToken = await rl.question("Access Token: ");
@@ -118,19 +122,20 @@ async function setup() {
     if (providerChoice === '3') aiKeyName = "ANTHROPIC_API_KEY";
 
     const aiKey = await rl.question(`${aiKeyName}: `);
-
-    console.log("\n--- X (Twitter) API Credentials ---");
-    const xApiKey = await rl.question("API Key: ");
-    const xApiSecret = await rl.question("API Key Secret: ");
-    const xAccessToken = await rl.question("Access Token: ");
-    const xAccessTokenSecret = await rl.question("Access Token Secret: ");
-
     envContent = `AI_PROVIDER=${aiKeyName.replace('_API_KEY', '')}\n`;
     envContent += `${aiKeyName}=${aiKey}\n`;
-    envContent += `X_API_KEY=${xApiKey}\n`;
-    envContent += `X_API_SECRET=${xApiSecret}\n`;
-    envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
-    envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+
+    if (needsTwitter) {
+      console.log("\n--- X (Twitter) API Credentials ---");
+      const xApiKey = await rl.question("API Key: ");
+      const xApiSecret = await rl.question("API Key Secret: ");
+      const xAccessToken = await rl.question("Access Token: ");
+      const xAccessTokenSecret = await rl.question("Access Token Secret: ");
+      envContent += `X_API_KEY=${xApiKey}\n`;
+      envContent += `X_API_SECRET=${xApiSecret}\n`;
+      envContent += `X_ACCESS_TOKEN=${xAccessToken}\n`;
+      envContent += `X_ACCESS_TOKEN_SECRET=${xAccessTokenSecret}\n`;
+    }
   }
 
   if (isPremium) envContent += `CLAW_LICENSE_KEY=${licenseKey}\n`;
