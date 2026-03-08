@@ -123,7 +123,6 @@ async function setup() {
       envContent += `X_MODE=LOCAL\n`;
     }
   }
-    }
 
   console.log("\n--- AI Provider Selection ---");
   console.log("[1] Gemini (Recommended)");
@@ -152,8 +151,6 @@ async function setup() {
   }
 
   envContent = await getIngredients(recipeName, envContent);
-    }
-  }
 
   if (isPremium) envContent += `CLAW_LICENSE_KEY=${licenseKey}\n`;
 
